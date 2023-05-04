@@ -191,13 +191,11 @@
             android:id="@+id/bt_current_location"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:text="Current Location"
             android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/bt_last_known_location"
-            app:layout_constraintTop_toBottomOf="@id/bt_request_permission" />
+            app:layout_constraintTop_toTopOf="@id/bt_last_known_location"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
