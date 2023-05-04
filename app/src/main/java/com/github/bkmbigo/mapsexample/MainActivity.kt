@@ -1,11 +1,14 @@
 package com.github.bkmbigo.mapsexample
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
+import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -34,8 +37,7 @@ class MainActivity : AppCompatActivity() {
 
                 else -> {
                     // Permission Denied
-
-
+                    setUpUI(false, isPermissionFullyDenied = true)
                 }
             }
         } else {
@@ -47,6 +49,7 @@ class MainActivity : AppCompatActivity() {
                 setUpUI(true)
             } else {
                 // Permission Denied
+                setUpUI(false, isPermissionFullyDenied = true)
             }
         }
     }
@@ -56,6 +59,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setButtonListeners()
         setUpUI()
     }
 
@@ -63,21 +67,28 @@ class MainActivity : AppCompatActivity() {
         setUpUI(true, currentLocation)
     }
 
-    private fun setUpUI(isPermissionGranted: Boolean = isCoarsePermissionGranted(), currentLocation: Location? = null){
+    private fun setUpUI(isPermissionGranted: Boolean = isCoarsePermissionGranted(), currentLocation: Location? = null, isPermissionFullyDenied: Boolean = false){
         binding.cvCurrentLocation.visibility = visibility(currentLocation != null)
-        binding.btRequestPermission.visibility = visibility(isPermissionGranted)
+        binding.btRequestPermission.visibility = visibility(!isPermissionGranted && !isPermissionFullyDenied)
         binding.btCurrentLocation.visibility = visibility(isPermissionGranted)
         binding.btLastKnownLocation.visibility = visibility(isPermissionGranted)
+        binding.cvPermissionDenied.visibility = visibility(isPermissionFullyDenied)
 
         currentLocation?.let { location ->
             binding.tvLongitudeValue.text = location.longitude.toString()
             binding.tvLatitudeValue.text = location.latitude.toString()
-            binding.tvAltitudeText.text = location.altitude.toString()
+            binding.tvAltitudeValue.text = location.altitude.toString()
+            binding.tvAccuracyValue.text = location.accuracy.toString()
+
+            binding.tvLabelCurrentLocation.text = generateHeading(isFinePermissionGranted(), true)
         }
     }
 
     private fun visibility(condition: Boolean): Int = if(condition) View.VISIBLE else View.GONE
     private fun visibility(condition: () -> Boolean): Int = if(condition.invoke()) View.VISIBLE else View.GONE
+
+    private fun generateHeading(isFineLocation: Boolean, isCurrentLocation: Boolean): String =
+        "${if(isCurrentLocation) "Current" else "Last Known"} Location (${if(isFineLocation) "Fine" else "Coarse"})"
 
     private fun setButtonListeners() {
         binding.btRequestPermission.setOnClickListener {
@@ -91,6 +102,9 @@ class MainActivity : AppCompatActivity() {
         binding.btCurrentLocation.setOnClickListener {
 
         }
+        binding.btGoToSettings.setOnClickListener {
+            goToSettings()
+        }
     }
 
     private fun requestPermissions() {
@@ -99,6 +113,14 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION
             )
+        )
+    }
+
+    private fun goToSettings() {
+        startActivity(
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.fromParts("package", packageName, null)
+            }
         )
     }
 
